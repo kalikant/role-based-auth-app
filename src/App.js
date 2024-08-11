@@ -1,25 +1,34 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './AuthContext';
+import LoginForm from './components/LoginForm';
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import Services from './pages/Services';
+import NotFound from './pages/NotFound';
+import Header from './components/Header';
 
 function App() {
+  const { isAuthenticated, userRole } = useAuth();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      {isAuthenticated && <Header role={userRole} />}
+      <Routes>
+        <Route path="/" element={isAuthenticated ? <Navigate to={userRole === 'admin' ? '/dashboard' : '/profile'} /> : <LoginForm />} />
+        <Route path="/dashboard" element={isAuthenticated && userRole === 'admin' ? <Dashboard /> : <Navigate to="/" />} />
+        <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/" />} />
+        <Route path="/services" element={isAuthenticated ? <Services /> : <Navigate to="/" />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
   );
 }
 
-export default App;
+export default function WrappedApp() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+}
